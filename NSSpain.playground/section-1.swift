@@ -1,3 +1,8 @@
+/*
+    Based on Swift and C Playground from Mike Ash:
+    https://gist.github.com/viteinfinite/7e48704566001c0e5cd7
+    https://vimeo.com/107707576
+*/
 
 import UIKit
 
@@ -43,7 +48,7 @@ realloctest()
 
 func hostname() {
     var buffer = [Int8](count: 1024, repeatedValue: 0)
-    gethostname(&buffer, UInt(buffer.count - 1))
+    gethostname(&buffer, Int(buffer.count - 1))
     puts(buffer)
 }
 hostname()
@@ -51,16 +56,16 @@ hostname()
 func memcpytest() {
     var val = 42
     var buf = [Int8](count: sizeofValue(val), repeatedValue: 0)
-    memcpy(&buf, &val, UInt(buf.count))
+    memcpy(&buf, &val, Int(buf.count))
     buf
 }
 memcpytest()
 
 func mmaptest() {
-    let ptr = UnsafeMutablePointer<Int>(mmap(nil, UInt(getpagesize()), PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0))
+    let ptr = UnsafeMutablePointer<Int>(mmap(nil, Int(getpagesize()), PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0))
     ptr[0] = 3
     ptr[0] // 3
-    munmap(ptr, UInt(getpagesize()))
+    munmap(ptr, Int(getpagesize()))
 }
 mmaptest()
 
@@ -68,13 +73,13 @@ func mmapfile() {
     let file = fopen("mmapfile", "w")
     let count = Int(getpagesize()) / sizeof(Int)
     let array = Array(0..<count)
-    fwrite(array, UInt(getpagesize()), 1, file)
+    fwrite(array, Int(getpagesize()), 1, file)
     fclose(file)
     
     let fd = open("mmapfile", O_RDWR)
-    let ptr = UnsafeMutablePointer<Int>(mmap(nil, UInt(getpagesize()), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FILE, fd, 0))
+    let ptr = UnsafeMutablePointer<Int>(mmap(nil, Int(getpagesize()), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FILE, fd, 0))
     ptr[42] // 42
-    munmap(ptr, UInt(getpagesize()))
+    munmap(ptr, Int(getpagesize()))
 }
 mmapfile()
 
@@ -82,6 +87,7 @@ func endian() {
     let value = 42
     let bigEndian = value.bigEndian
     let value2 = Int(bigEndian: bigEndian)
+    value2
 }
 endian()
 
@@ -115,7 +121,7 @@ func writeall(fd: Int32, data: [UInt8]) {
         
         while cursor < bufferPointer.count {
             let toWrite = bufferPointer.count - cursor
-            let written = write(fd, bufferPointer.baseAddress + cursor, UInt(toWrite))
+            let written = write(fd, bufferPointer.baseAddress + cursor, Int(toWrite))
             if written < 0 && errno != EAGAIN && errno != EINTR {
                 perror("write")
                 abort()
@@ -127,7 +133,7 @@ func writeall(fd: Int32, data: [UInt8]) {
 
 func readsome(fd: Int32) -> [Int8]? {
     var buf = [Int8](count: 128, repeatedValue: 0)
-    let result = read(fd, &buf, UInt(buf.count))
+    let result = read(fd, &buf, Int(buf.count))
     if result > 0 {
         return Array(buf[0..<result])
     } else if result == 0 {
@@ -163,7 +169,7 @@ func sockets() {
     freeaddrinfo(infoPtr)
     
     let str = "GET / HTTP/1.0\r\nHost: mikeash.com\r\n\r\n"
-    writeall(s, Array(str.utf8))
+    writeall(s, data: Array(str.utf8))
     
     while let buf = readsome(s) {
         print(String.fromCString(buf + [0])!)
@@ -181,7 +187,7 @@ func casting() {
         // 4,607,182,418,800,017,408
         
         let bytePtr = UnsafePointer<UInt8>(ptr)
-        let bytes = map(0..<sizeofValue(x)){ bytePtr[$0] }
+        let bytes = (0..<sizeofValue(x)).map() { bytePtr[$0] }
         bytes
         // [0, 0, 0, 0, 0, 0, 240, 63]
     })
@@ -205,7 +211,7 @@ func varlet() {
 
     let file = fopen("varlet", "w")
     var value = 42
-    fwrite(&value, UInt(sizeofValue(value)), 1, file)
+    fwrite(&value, Int(sizeofValue(value)), 1, file)
     fclose(file)
 }
 varlet()
